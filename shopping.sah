@@ -1,0 +1,82 @@
+//this script finds a specific guitar pedal at a price below our budget and orderes it
+
+//this function goes from Google to Thomann, where we will order the guitar pedal from
+function goToSite($FromSite, $ToSite){
+	_navigateTo($FromSite);
+	_click(_div("Приемам"));
+	_navigateTo($ToSite)
+	_click(_span("Alrighty!"));
+	_click(_link("Gui­tars and Basses"));
+	_click(_image("Guitar and Bass Effects"));
+	_click(_image("Wah Pedals"));
+}
+
+//this function handles navigation to the checkout page and the subsequent user input
+function order($index, $Emailaddress, $Firstname, $Familyname, $Street, $City, $Zipcode, $Telephonenumber){
+	_click(_submit("basket-button" + "[" + $index + "]"));
+	_click(_span("user-navigation__basket-amount fx-typography-teaser js-user-navigation-basket-amount"));
+	_click(_button("To checkout"));
+	_setValue(_textbox("emailaddress"), $Emailaddress);
+	_setValue(_textbox("firstname"), $Firstname);
+	_click(_div("input[3]"));
+	_setValue(_textbox("familyname"), $Familyname);
+	_setValue(_textbox("street"), $Street);
+	_setValue(_textbox("city"), $City);
+	_setValue(_textbox("zipcode"), $Zipcode);
+	_setValue(_textbox("telephonenumber"), $Telephonenumber);
+}
+
+//this function empties the basket after the order has been filled out
+function cancelOrder() {
+	_click(_span("1"));
+	_click(_div("action delete-action"));
+	_click(_button("OK"));
+}
+
+/* --Functions Above-- */
+
+goToSite("https://google.com", "https://thomann.de/");
+
+//we store the two possible versions of spelling the guitar pedal we are interested in
+var $objectV1 = "Cry Baby";
+var $objectV2 = "Crybaby";
+
+var $budget = 145;
+
+//we sort by rating, to select only from the best pedals
+_setSelected(_select(1), "Best rated first");
+
+//control variables
+var $contains = 0;
+var $buy = 0;
+
+var $i = 0;			//iterator
+while ($buy == 0 && $i < 25) {
+	if(_containsText(_div("product__title fx-text" + "[" + $i + "]"), $objectV1))
+		$contains = 1;
+	else if (_containsText(_div("product__title fx-text" + "[" + $i + "]"), $objectV2))
+		$contains = 1;
+
+	//we cannot directly read the price value, so we first extract the price string
+	var $priceString = "";
+	var $price = 0;
+
+	if ($contains == 1){
+		//we process the price string to convert it to its number value
+		$priceString = _getText(_span("fx-typography-price-secondary fx-price-group__secondary product__price-secondary" + "[" + $i + "]"));
+		$priceString = $priceString.substring(1);
+		$price = parseInt($priceString);
+
+		if ($price < $budget)
+			$buy = 1;
+		else $contains = 0;
+	}
+	$i++;
+}
+
+if ($buy == 1) {
+	$i = $i - 1;
+	order($i,"stl200@aubg.edu", "Stefan", "Leon", "Svoboda Bachvarova 4", "Blagoevgrad", "2700", "+359887702015");
+	cancelOrder();
+}
+else _alert("Could not find a guitar pedal at the current budget :(");		//if the program fails to find a pedal affordable enough, we output a message to the user
